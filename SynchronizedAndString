@@ -1,0 +1,64 @@
+
+/**
+* 转载自：http://www.cnblogs.com/xrq730/p/6662232.html
+* 原作者：五月的仓颉
+*/
+
+public class StringThread implements Runnable {
+ 
+    private static final String LOCK_PREFIX = "XXX---";
+ 
+    private String ip;
+ 
+    public StringThread(String ip) {
+        this.ip = ip;
+    }
+ 
+    @Override
+    public void run() {
+        String strLock = buildStrLock();
+        synchronized (strLock) {
+            System.out.println("[" + JdkUtil.getThreadName() + "]开始运行了");
+            // 休眠5秒模拟脚本调用
+            JdkUtil.sleep(5000);
+            System.out.println("[" + JdkUtil.getThreadName() + "]结束运行了");
+        }
+    }
+ 
+    private String buildStrLock() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(LOCK_PREFIX);
+        sb.append(ip);
+ 
+        String lock = sb.toString();
+        System.out.println("[" + JdkUtil.getThreadName() + "]构建了锁[" + lock + "]");
+ 
+        return lock;
+    }
+}
+上述代码将会无法形成有效的锁
+因为synchronized锁对象的时候，保证同步代码块中的代码执行是串行执行的前提条件是锁住的对象是同一个，因此既然多线程在synchronized部分是并行执行的，那么可以推测出多线程下传入同一个IP，构建出来的lock字符串并不是同一个。
+lock是由StringBuilder生成的，看一下StringBuilder的toString方法：
+
+public String toString() {
+    // Create a copy, don't share the array
+    return new String(value, 0, count);
+}
+
+上面的问题原因找到了，就是每次StringBuilder构建出来的对象都是new出来的对象，那么应当如何解决？这里我先给解决办法就是sb.toString()后再加上intern()
+
+再看String
+
+JVM内存区域里面有一块常量池，关于常量池的分配：
+
+JDK6的版本，常量池在持久代PermGen中分配
+JDK7的版本，常量池在堆Heap中分配
+字符串是存储在常量池中的，有两种类型的字符串数据会存储在常量池中：
+
+编译期就可以确定的字符串，即使用""引起来的字符串，比如String a = "123"、String b = "1" + B.getStringDataFromDB() + "2" + C.getStringDataFromDB()、这里的"123"、"1"、"2"都是编译期间就可以确定的字符串，因此会放入常量池，而B.getStringDataFromDB()、C.getStringDataFromDB()这两个数据由于编译期间无法确定，因此它们是在堆上进行分配的
+使用String的intern()方法操作的字符串，比如String b = B.getStringDataFromDB().intern()，尽管B.getStringDataFromDB()方法拿到的字符串是在堆上分配的，但是由于后面加入了intern()，因此B.getStringDataFromDB()方法的结果，会写入常量池中
+常量池中的String数据有一个特点：每次取数据的时候，如果常量池中有，直接拿常量池中的数据；如果常量池中没有，将数据写入常量池中并返回常量池中的数据。
+
+因此回到我们之前的场景，使用StringBuilder拼接字符串每次返回一个new的对象，但是使用intern()方法则不一样：
+
+
