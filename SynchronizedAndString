@@ -3,6 +3,16 @@
 * 转载自：http://www.cnblogs.com/xrq730/p/6662232.html
 * 原作者：五月的仓颉
 */
+问题描述
+
+业务有一个需求，我把问题描述一下：
+
+通过代理IP访问国外某网站N，每个IP对应一个固定的网站N的COOKIE，COOKIE有失效时间。
+
+并发下，取IP是有一定策略的，取到IP之后拿IP对应的COOKIE，发现COOKIE超过失效时间，则调用脚本访问网站N获取一次数据。
+
+为了防止多线程取到同一个IP，同时发现该IP对应的COOKIE失效，同时去调用脚本更新COOKIE，针对IP加了锁。为了保证锁的全局唯一性，在锁前面加了标识业务的前缀，使用synchronized(lock){...}的方式，锁住"锁前缀+IP"，这样保证多线程取到同一个IP，也只有一个IP会更新COOKIE。
+不知道这个问题有没有说清楚，没说清楚没关系，写一段测试代码：
 
 public class StringThread implements Runnable {
  
