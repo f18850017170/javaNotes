@@ -8,3 +8,72 @@ mock注解说明
 @InjectMocks--英[注入mocks]--使用该注解的对象初始化时，会使用其他使用了@Mock或@Spy注解的对象，来注入；包括构造器注入，setter方法注入，以及字段注入（
 即使是私有的，因为是通过反射注入的）,静态的和final修改的会被忽略，详情参见官方文档（https://static.javadoc.io/org.mockito/mockito-core/2.7.22/org/mockito/InjectMocks.html）
 
+demo:
+//服务B
+@service
+public class serviceB{
+  public boolean execute(String temp){
+      System.out.println(temp);
+      return true;
+  }
+}
+//服务B
+@Service 
+public class ServiceA{
+  @Resource
+  private ServiceB serviceB;
+  public boolean invoke(String temp){
+      return serviceB.execute(temp);
+  }
+}
+//测试类
+@RunWith(SpringJunit4ClassRunner)
+@ContextConfiguration("/classpath:application.xml")
+public class Test{
+  @InjectMocks
+  private ServiceA serviceA;
+  @InjectMocks
+  @Spy
+  private ServiceB serviceB
+  //使用before注解来初始化声明
+  @Before
+  public void before(){
+    MockitoAnnotations.initMocks(this);//扫描mock相关注解
+    ArgumentMatcher<String> matcher  = new ArgumentMatcher<String>(){
+        @Override
+        public boolean matches(Object o){
+            if(null != o && o.getClass() == String.class){//匹配的输入条件,边界值啥的
+              String temp = (String)o;
+              if(temp.equals("Von")){
+                return true;
+              }
+            }
+            return false;
+        }
+    }
+    doReturn(false).when(serviceB).execute(argThat(matcher));
+    Matcher<String> complementMatcher = MatcherComplement.buildComplements(matcher);
+    doReturn(false).when(serviceB).execute(argThat(complementMatcher));
+  }
+  @Test
+  public void test(){
+    boolean a1 = serviceA.invoke("von");//a1:true;
+    boolean a2 = serviceA.invoke("nonVon");//a2:false
+  }
+}
+//取补集
+public class MatcherComplement{
+    public static Matcher buildComplements(final ArgumentMatcher matcher){
+      if(null != matcher){
+          return (Matcher)Proxy.newProxyInstance(ClassLoader.getSystemClassLoader(),new Class[]{Matcher.class},
+          new InvocationHandler(){
+            public Oobject invoke(Object proxy,Method method,Object[] args) throws Throwable{
+              if(method.getName.equals("matches")){
+                  return !(Boolean)method.invoke(matcher,args);
+              }
+              return method.invoke(matcher,args);
+            } 
+          });
+      }
+    }
+}
