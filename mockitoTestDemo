@@ -32,8 +32,9 @@ public class ServiceA{
 public class Test{
   @InjectMocks
   private ServiceA serviceA;
-  @InjectMocks
+  
   @Spy
+  @Resource
   private ServiceB serviceB
   //使用before注解来初始化声明
   @Before
