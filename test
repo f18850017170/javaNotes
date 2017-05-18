@@ -1,0 +1,10 @@
+1、加载spring上下文（或web测试）
+使用如下注解
+@RunWith(SpringJunit4ClassRunner.clss)
+@ContextConfiguration("classpath:/applicationContext.xml")
+public class Test{
+  @Test
+  public void test(){
+     System.out.println(" this is a test");
+  }
+}
