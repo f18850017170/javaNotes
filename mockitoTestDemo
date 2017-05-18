@@ -44,14 +44,14 @@ public class Test{
         public boolean matches(Object o){
             if(null != o && o.getClass() == String.class){//匹配的输入条件,边界值啥的
               String temp = (String)o;
-              if(temp.equals("Von")){
+              if(temp.equals("von")){
                 return true;
               }
             }
             return false;
         }
     }
-    doReturn(false).when(serviceB).execute(argThat(matcher));
+    doReturn(true).when(serviceB).execute(argThat(matcher));
     Matcher<String> complementMatcher = MatcherComplement.buildComplements(matcher);
     doReturn(false).when(serviceB).execute(argThat(complementMatcher));
   }
