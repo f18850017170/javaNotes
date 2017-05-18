@@ -3,8 +3,11 @@
 @RunWith(SpringJunit4ClassRunner.clss)
 @ContextConfiguration("classpath:/applicationContext.xml")
 public class Test{
+  @Resource
+  private Dao dao
   @Test
   public void test(){
+     dao.execute();
      System.out.println(" this is a test");
   }
 }
