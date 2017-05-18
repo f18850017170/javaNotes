@@ -4,7 +4,8 @@ mock注解说明
 
 @Spy--英[间谍]--创建一个卧底或者间谍对象，是一个真是实例的副本，如果没有对任何方法进行打桩[stub]的话，调用任何方法将调用原本对象拷贝过来的方法，
 若打桩[stub]，则不执行原对象拷贝过来的方法并返回预设值（注意，不显示构建对象的话[new],只会调用构造器（包括私有构造器）构建新的对象，然后拷贝，
-因此若有其他依赖将为null，可以和其他注解搭配使用，eg:@Resource，@InjectMocks）
+因此若有其他依赖将为null，可以和其他注解搭配使用，eg:@Resource，@InjectMocks）not use Mockito.when(Object) for stubbing spies(会报错) 
+always use doReturn|Answer|Throw()|CallRealMethod 
 
 @InjectMocks--英[注入mocks]--使用该注解的对象初始化时，会使用其他使用了@Mock或@Spy注解的对象，来注入；包括构造器注入，setter方法注入，以及字段注入（
 即使是私有的，因为是通过反射注入的）,静态的和final修改的会被忽略，详情参见官方文档（https://static.javadoc.io/org.mockito/mockito-core/2.7.22/org/mockito/InjectMocks.html）
