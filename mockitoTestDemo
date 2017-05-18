@@ -34,7 +34,7 @@ public class Test{
   private ServiceA serviceA;
   
   @Spy
-  @Resource
+  //若ServiceB 是接口，可以添加@Resource注解，按原始的方式注入
   private ServiceB serviceB
   //使用before注解来初始化声明
   @Before
