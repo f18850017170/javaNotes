@@ -1,0 +1,85 @@
+package com.hqsf.manage.web.util;
+
+import com.google.common.collect.Maps;
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.EncodeHintType;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.qrcode.QRCodeWriter;
+import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
+import java.util.Map;
+
+/**
+ * 二维码图片生成
+ */
+public class QrCodeImgGenerateUtils {
+    private static final Logger logger = LoggerFactory.getLogger(QrCodeImgGenerateUtils.class);
+    public static final int SIZE = 300;
+    public static final String IMG_TYPE = "png";
+    public static final String DEF_CHARACTER_SET = "UTF-8";
+
+    /**
+     * @param codeContent
+     * @param output
+     */
+    public static void generator(String codeContent, OutputStream output) {
+        generator(codeContent, SIZE, output);
+    }
+
+    /**
+     * @param codeContent
+     * @param size
+     * @param output
+     */
+    public static void generator(String codeContent, int size, OutputStream output) {
+        Map<EncodeHintType, Object> hintMap = Maps.newHashMap();
+        hintMap.put(EncodeHintType.CHARACTER_SET, DEF_CHARACTER_SET);
+        hintMap.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.L);//容错能力（QR码图形如果有破损，仍然可以被机器读取内容）
+        hintMap.put(EncodeHintType.MARGIN, 1);
+        try {
+            QRCodeWriter qrCodeWriter = new QRCodeWriter();
+            BitMatrix byteMatrix = qrCodeWriter.encode(codeContent, BarcodeFormat.QR_CODE, size, size, hintMap);
+            int byteMatrixWidth = byteMatrix.getWidth();
+            BufferedImage image = new BufferedImage(byteMatrixWidth, byteMatrixWidth, BufferedImage.TYPE_INT_RGB);
+            image.createGraphics();
+            Graphics2D graphics = (Graphics2D) image.getGraphics();
+            graphics.setColor(Color.WHITE);
+            graphics.fillRect(0, 0, byteMatrixWidth, byteMatrixWidth);
+            graphics.setColor(Color.BLACK);
+            for (int i = 0; i < byteMatrixWidth; i++) {
+                for (int j = 0; j < byteMatrixWidth; j++) {
+                    if (byteMatrix.get(i, j)) {
+                        graphics.fillRect(i, j, 1, 1);
+                    }
+                }
+            }
+            ImageIO.write(image, IMG_TYPE, output);
+        } catch (Exception e) {
+            logger.error("生成二维码失败", e);
+        }
+    }
+
+    public static void main(String[] args) throws FileNotFoundException {
+        File file = new File("f:/qrcode/outputStream.png");
+        FileOutputStream outputStream = new FileOutputStream(file);
+        generator("http://www.baidu.com", 300, outputStream);
+    }
+}
+
+/**
+*   依赖
+*   <dependency>
+*		  <groupId>com.google.zxing</groupId>
+*		  <artifactId>core</artifactId>
+*		  <version>3.3.0</version>
+*	  </dependency>
+**/
